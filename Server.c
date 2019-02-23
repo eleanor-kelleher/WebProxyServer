@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 
   if(argc < 2) {
     fprintf(stderr, "Error: please enter a port number.\n");
+    exit(1);
   }
 
   //AF_INET -> address family of IPv4
@@ -61,8 +62,6 @@ int main(int argc, char *argv[]) {
   listen(socket_fd, 5); //allow up to 5 connections
 
 
-
-
   //1 give size to client_addr_length to pass on to accept()
   //2 create another socket with socket descriptor, client address & its size
   //3 if fails return value < zero and will produce an error
@@ -71,23 +70,17 @@ int main(int argc, char *argv[]) {
   new_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr,
                          &client_addr_length);
   if(new_socket_fd < 0) {
-    error("Error: server couldn't accept client.");
+    error("Error: server could not accept client.");
   }
-
   bzero(buffer,256);
   ret_val = read(new_socket_fd, buffer, 255);
-
   if(ret_val < 0) {
-    error("Error: couldn't read socket.");
+    error("Error: could not read socket.");
   }
-  printf("Here is the message:%s",buffer);
-
+  printf("Client says: %s", buffer);
   ret_val = write(new_socket_fd,"Got your message.",16);
-
   if(ret_val < 0) {
-    error("Error: couldn't write on socket.");
+    error("Error: could not write to socket.");
   }
-
   return 0;
-
 }
