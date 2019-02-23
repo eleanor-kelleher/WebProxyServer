@@ -9,11 +9,11 @@
 
 void error(const char *message) {
     perror(message);
-    exit(0);
+    exit(1);
 }
 
 int main(int argc, char *argv[]) {
-  int socket_fd;
+  int socket_fd; //file descriptor
   int port;
   int ret_val;
   struct sockaddr_in server_addr;
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
   if(argc < 3) {
     fprintf(stderr, "usage %s hostname port\n", argv[0]);
-    exit(0);
+    exit(1);
   }
 
   port = atoi(argv[2]);
@@ -30,30 +30,35 @@ int main(int argc, char *argv[]) {
   if (socket_fd < 0)
     error("Error: socket could not be opened.");
 
-  server = gethostbyname(argv[1]);
+  server = gethostbyname(argv[1]); //create hostent with given host name
   if (server == NULL) {
-    fprintf(stderr, "Error: no such host.\n");
+    fprintf(stderr, "Error: no such host exists.\n");
     exit(0);
   }
 
   bzero((char *) &server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
+  //copy addr-length of bytes from first arg to the second arg
   bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr,
         server->h_length);
   server_addr.sin_port = htons(port);
   if (connect(socket_fd, (struct sockaddr *) &server_addr,
-              sizeof(server_addr)) < 0)
+              sizeof(server_addr)) < 0) {
     error("Error: could not connect.");
+  }
   printf("Please enter the message: ");
   bzero(buffer, 256);
+  //reads stdin and stores 255 bytes of it in buffer
   fgets(buffer, 255, stdin);
   ret_val = write(socket_fd, buffer, strlen(buffer));
-  if (ret_val < 0)
+  if (ret_val < 0) {
     error("Error: could not write to socket");
+  }
   bzero(buffer, 256);
   ret_val = read(socket_fd, buffer, 255);
-  if (ret_val < 0)
+  if (ret_val < 0) {
     error("Error: could not read from socket");
+  }
   printf("%s\n", buffer);
   close(socket_fd);
   return 0;
