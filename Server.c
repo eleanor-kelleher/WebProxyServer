@@ -13,9 +13,9 @@
 //server accepts connection & creates a new socket to the same port
 //if connection accepted, socket created on the client side to communicate
 
-void ErrorMessage(const char *msg){
-  perror(msg);
-  return;
+void error(const char *message){
+  perror(message);
+  exit(1);
 }
 
 int main(int argc, char *argv[]) {
@@ -31,14 +31,15 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in client_addr;
 
   if(argc < 2) {
-    fprintf(stderr, "Missing port\n");
+    fprintf(stderr, "Error: please enter a port number.\n");
   }
 
   //AF_INET -> address family of IPv4
   //SOCK_STREAM -> byte stream socket, for TCP
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+  printf("Server socket created.\n");
   if(socket_fd < 0) {
-    fprintf(stderr, "Error: socket could not be opened\n");
+    fprintf(stderr, "Error: socket could not be opened.\n");
   }
  //fills the buffer server_addr with zeros
   bzero((char *)&server_addr, sizeof(server_addr));
@@ -50,14 +51,14 @@ int main(int argc, char *argv[]) {
   //pass IP of the host to s_adder -> INADDR_ANY allows program to work
   //without needing to know the IP address of  machine it is running on
   server_addr.sin_addr.s_addr = INADDR_ANY;
-
+  printf("Connecting server...\n");
   if(bind(socket_fd, (struct sockaddr *) &server_addr,
           sizeof(server_addr)) < 0) {
-        perror("Error: connection not bound\n");
-        return(-1);
+        error("Error: connection not bound.\n");
     }
-
-  listen(socket_fd, 5);
+  printf("Server connected.\n");
+  printf("Server listening on port %d...\n", port);
+  listen(socket_fd, 5); //allow up to 5 connections
 
 
 
@@ -70,24 +71,21 @@ int main(int argc, char *argv[]) {
   new_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr,
                          &client_addr_length);
   if(new_socket_fd < 0) {
-    perror("Error: server couldn't accept client");
-    return(-1);
+    error("Error: server couldn't accept client.");
   }
 
   bzero(buffer,256);
   ret_val = read(new_socket_fd, buffer, 255);
 
   if(ret_val < 0) {
-    perror("Error: couldn't read socket");
-    return(-1);
+    error("Error: couldn't read socket.");
   }
   printf("Here is the message:%s",buffer);
 
-  ret_val = write(new_socket_fd,"Got your message",16);
+  ret_val = write(new_socket_fd,"Got your message.",16);
 
   if(ret_val < 0) {
-    perror("Error: couldn't write on socket");
-    return(-1);
+    error("Error: couldn't write on socket.");
   }
 
   return 0;
