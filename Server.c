@@ -51,8 +51,8 @@ int main(int argc, char *argv[]) {
   //without needing to know the IP address of  machine it is running on
   server_addr.sin_addr.s_addr = INADDR_ANY;
 
-  if(bind(socket_fd, (struct sockaddr *)&server_addr,
-          sizeof(server_addr) < 0)) {
+  if(bind(socket_fd, (struct sockaddr *) &server_addr,
+          sizeof(server_addr)) < 0) {
         perror("Error: connection not bound\n");
         return(-1);
     }
