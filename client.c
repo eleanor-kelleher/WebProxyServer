@@ -12,10 +12,27 @@ void error(const char *message) {
     exit(1);
 }
 
+void keep_connection(int socket) {
+  int ret_val = 0; //no of characters string from read() & write()
+  char buffer[256]; //store sent message
+  bzero(buffer, 256);
+
+  while(1) {
+    printf("Please enter the message:\n");
+    //reads stdin and stores 255 bytes of it in buffer
+    fgets(buffer, 255, stdin);
+    ret_val = write(socket, buffer, strlen(buffer));
+    if (ret_val < 0) error("Error: could not write to socket");
+    bzero(buffer, 256);
+    ret_val = read(socket, buffer, 255);
+    if (ret_val < 0) error("Error: could not read from socket");
+    printf("%s\n", buffer);
+ }
+}
+
 int main(int argc, char *argv[]) {
   int socket_fd; //file descriptor
   int port;
-  int ret_val;
   struct sockaddr_in server_addr;
   struct hostent *server; //represents an entry in the hosts database
   char buffer[256];
@@ -46,20 +63,7 @@ int main(int argc, char *argv[]) {
               sizeof(server_addr)) < 0) {
     error("Error: could not connect.");
   }
-  printf("Please enter the message: ");
-  bzero(buffer, 256);
-  //reads stdin and stores 255 bytes of it in buffer
-  fgets(buffer, 255, stdin);
-  ret_val = write(socket_fd, buffer, strlen(buffer));
-  if (ret_val < 0) {
-    error("Error: could not write to socket");
-  }
-  bzero(buffer, 256);
-  ret_val = read(socket_fd, buffer, 255);
-  if (ret_val < 0) {
-    error("Error: could not read from socket");
-  }
-  printf("%s\n", buffer);
+  keep_connection(socket_fd);
   close(socket_fd);
   return 0;
 }

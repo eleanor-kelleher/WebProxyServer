@@ -18,14 +18,26 @@ void error(const char *message){
   exit(1);
 }
 
+void keep_connection(int socket) {
+  int ret_val = 0; //no of characters string from read() & write()
+  char buffer[256]; //store sent message
+  bzero(buffer, 256);
+
+  ret_val = read(socket, buffer, 255);
+  if(ret_val < 0) error("Error: could not read socket.");
+  printf("Message from client: %s", buffer);
+  ret_val = write(socket, "Acknowledgement.", 16);
+  if(ret_val < 0) error("Error: could not write to socket.");
+}
+
+
+
 int main(int argc, char *argv[]) {
   int socket_fd = 0; //file descriptor
   int new_socket_fd = 0; //file descriptor
   int port = 0;
+  int process_id = 0; //each client socket connection gets a new process
   int client_addr_length = 0;
-  int ret_val = 0; //no of characters string from read() & write()
-  char buffer[256]; //read message sent
-
   //struct that stores IP - IP of server and client stored
   struct sockaddr_in server_addr;
   struct sockaddr_in client_addr;
@@ -55,8 +67,8 @@ int main(int argc, char *argv[]) {
   printf("Connecting server...\n");
   if(bind(socket_fd, (struct sockaddr *) &server_addr,
           sizeof(server_addr)) < 0) {
-        error("Error: connection not bound.\n");
-    }
+    error("Error: connection not bound.\n");
+  }
   printf("Server connected.\n");
   printf("Server listening on port %d...\n", port);
   listen(socket_fd, 5); //allow up to 5 connections
@@ -67,20 +79,26 @@ int main(int argc, char *argv[]) {
   //3 if fails return value < zero and will produce an error
   //accept() will block  process until a client connects
   client_addr_length = sizeof(client_addr);
-  new_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr,
-                         &client_addr_length);
-  if(new_socket_fd < 0) {
-    error("Error: server could not accept client.");
+
+  //loop will allow multiple socket connections
+  while(1) {
+    new_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr,
+                           &client_addr_length);
+    if(new_socket_fd < 0) {
+      error("Error: server could not accept client.");
+    }
+    process_id = fork();
+    if(process_id < 0) {
+      error("Error: fork unsuccessful.");
+    }
+    if(process_id == 0) {
+      close(socket_fd);
+      keep_connection(new_socket_fd);
+      exit(0);
+    }
+    else close(new_socket_fd);
   }
-  bzero(buffer,256);
-  ret_val = read(new_socket_fd, buffer, 255);
-  if(ret_val < 0) {
-    error("Error: could not read socket.");
-  }
-  printf("Client says: %s", buffer);
-  ret_val = write(new_socket_fd,"Got your message.",16);
-  if(ret_val < 0) {
-    error("Error: could not write to socket.");
-  }
-  return 0;
+
+  close(socket_fd);
+  return 0; //never reached
 }
