@@ -18,7 +18,7 @@ void keep_connection(int socket) {
   bzero(buffer, 256);
 
   while(1) {
-    printf("Please enter the message:\n");
+    printf("Please enter URL:\n");
     //reads stdin and stores 255 bytes of it in buffer
     fgets(buffer, 255, stdin);
     ret_val = write(socket, buffer, strlen(buffer));
@@ -27,7 +27,7 @@ void keep_connection(int socket) {
     ret_val = read(socket, buffer, 255);
     if (ret_val < 0) error("Error: could not read from socket");
     printf("%s\n", buffer);
- }
+  }
 }
 
 int main(int argc, char *argv[]) {
