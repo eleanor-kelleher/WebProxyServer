@@ -19,15 +19,18 @@ void error(const char *message){
 }
 
 void keep_connection(int socket) {
-  int ret_val = 0; //no of characters string from read() & write()
-  char buffer[256]; //store sent message
-  bzero(buffer, 256);
+  while(1) {
+    int ret_val = 0; //no of characters string from read() & write()
+    char buffer[256]; //store sent message
+    bzero(buffer, 256);
 
-  ret_val = read(socket, buffer, 255);
-  if(ret_val < 0) error("Error: could not read socket.");
-  printf("Message from client: %s", buffer);
-  ret_val = write(socket, "Acknowledgement.", 16);
-  if(ret_val < 0) error("Error: could not write to socket.");
+    ret_val = read(socket, buffer, 255);
+    if(ret_val < 0) error("Error: could not read socket.");
+    printf("Message from client: %s", buffer);
+    ret_val = write(socket, "Acknowledgement.", 16);
+    if(ret_val < 0) error("Error: could not write to socket.");
+    printf("Acknowledgement sent to client.\n");
+  }
 }
 
 
@@ -79,9 +82,9 @@ int main(int argc, char *argv[]) {
   //3 if fails return value < zero and will produce an error
   //accept() will block  process until a client connects
   client_addr_length = sizeof(client_addr);
-
   //loop will allow multiple socket connections
   while(1) {
+
     new_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr,
                            &client_addr_length);
     if(new_socket_fd < 0) {
